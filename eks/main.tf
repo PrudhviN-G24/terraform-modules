@@ -97,6 +97,23 @@ resource "aws_ec2_tag" "subnet_tags" {
 }
 
 
+# Optional: Mark public subnets (for ELB)
+resource "aws_ec2_tag" "public_subnet_elb_tag" {
+  for_each    = var.enable_node_group && length(var.public_subnet_ids) > 0 ? toset(var.public_subnet_ids) : []
+  resource_id = each.value
+  key         = "kubernetes.io/role/elb"
+  value       = "1"
+}
+
+# Optional: Mark private subnets (for internal ELB)
+resource "aws_ec2_tag" "private_subnet_elb_tag" {
+  for_each    = var.enable_node_group && length(var.private_subnet_ids) > 0 ? toset(var.private_subnet_ids) : []
+  resource_id = each.value
+  key         = "kubernetes.io/role/internal-elb"
+  value       = "1"
+}
+
+
 # EKS Cluster
 resource "aws_eks_cluster" "this" {
   name     = var.cluster_name
@@ -138,7 +155,15 @@ resource "aws_eks_node_group" "this" {
     "eks/nodegroup" = var.node_group_name
   })
   
-  depends_on = [aws_eks_cluster.this]
+  
+  depends_on = [
+  aws_eks_cluster.this,
+  aws_iam_role.nodegroup,
+  aws_iam_role_policy_attachment.node_AmazonEKSWorkerNodePolicy,
+  aws_iam_role_policy_attachment.node_CNI,
+  aws_iam_role_policy_attachment.node_ContainerRegistry
+]
+
 
 
 }
