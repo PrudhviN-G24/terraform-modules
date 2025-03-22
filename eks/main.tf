@@ -83,35 +83,6 @@ resource "aws_iam_role_policy_attachment" "fargate_exec" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy"
 }
 
-resource "aws_ec2_tag" "vpc_tag" {
-  resource_id = var.vpc_id
-  key         = "kubernetes.io/cluster/${var.cluster_name}"
-  value       = "shared"
-}
-
-resource "aws_ec2_tag" "subnet_tags" {
-  for_each = toset(var.subnet_ids)
-  resource_id = each.value
-  key         = "kubernetes.io/cluster/${var.cluster_name}"
-  value       = "shared"
-}
-
-
-# Optional: Mark public subnets (for ELB)
-resource "aws_ec2_tag" "public_subnet_elb_tag" {
-  for_each    = var.enable_node_group && length(var.public_subnet_ids) > 0 ? toset(var.public_subnet_ids) : []
-  resource_id = each.value
-  key         = "kubernetes.io/role/elb"
-  value       = "1"
-}
-
-# Optional: Mark private subnets (for internal ELB)
-resource "aws_ec2_tag" "private_subnet_elb_tag" {
-  for_each    = var.enable_node_group && length(var.private_subnet_ids) > 0 ? toset(var.private_subnet_ids) : []
-  resource_id = each.value
-  key         = "kubernetes.io/role/internal-elb"
-  value       = "1"
-}
 
 
 # EKS Cluster
