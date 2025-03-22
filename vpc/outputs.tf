@@ -22,3 +22,7 @@ output "s3_vpc_endpoint_id" {
   description = "S3 VPC Endpoint ID (if enabled)"
   value       = var.enable_s3_gateway_endpoint ? aws_vpc_endpoint.s3[0].id : null
 }
+
+output "default_sg_id" {
+  value = aws_vpc.main.default_security_group_id
+}
